@@ -194,7 +194,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 If you have any questions or suggestions, please contact us through:
 
-- 📧 Email: [your-email@example.com]
+- 📧 Email: [chen.i1@northeastern.edu]
 - 🐛 Issues: [GitHub Issues](https://github.com/your-username/mail-fashion-kanban/issues)
 - 💬 Discussions: [GitHub Discussions](https://github.com/your-username/mail-fashion-kanban/discussions)
 
