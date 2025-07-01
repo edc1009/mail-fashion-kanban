@@ -39,12 +39,6 @@ class GmailService {
       // Load Google API client
       await this.loadGoogleAPI();
       
-      // Initialize auth
-      this.auth = google.auth.getAuthHeadersClient({
-        keyFile: '', // We'll use OAuth2 instead
-        scopes: SCOPES,
-      });
-
       // Initialize OAuth2 client
       const oauth2Client = new google.auth.OAuth2(
         CLIENT_ID,

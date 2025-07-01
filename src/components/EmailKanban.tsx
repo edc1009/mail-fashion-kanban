@@ -30,6 +30,7 @@ const EmailKanban = () => {
   const [newColumnTitle, setNewColumnTitle] = useState('');
   const [newColumnColor, setNewColumnColor] = useState('from-gray-500 to-gray-600');
   const [showGmailDialog, setShowGmailDialog] = useState(false);
+  const [draggedColumnId, setDraggedColumnId] = useState<string | null>(null);
 
   const [columns, setColumns] = useState([
     {
@@ -100,6 +101,15 @@ const EmailKanban = () => {
   const handleDragStart = (e: React.DragEvent, cardId: string, sourceColumnId: string) => {
     e.dataTransfer.setData('cardId', cardId);
     e.dataTransfer.setData('sourceColumnId', sourceColumnId);
+  };
+
+  const handleColumnDragStart = (e: React.DragEvent, columnId: string) => {
+    e.dataTransfer.setData('columnId', columnId);
+    setDraggedColumnId(columnId);
+  };
+
+  const handleColumnDragEnd = () => {
+    setDraggedColumnId(null);
   };
 
   const handleAddColumn = () => {
@@ -254,6 +264,10 @@ const EmailKanban = () => {
             onSaveEdit={handleSaveEdit}
             onCancelEdit={handleCancelEdit}
             colorOptions={colorOptions}
+            isDragging={draggedColumnId === column.id}
+            onColumnDragStart={(e) => handleColumnDragStart(e, column.id)}
+            onColumnDragEnd={handleColumnDragEnd}
+            canDragColumn={true}
           />
         ))}
         
