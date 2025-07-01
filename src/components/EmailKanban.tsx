@@ -1,9 +1,11 @@
-
 import React, { useState } from 'react';
 import { Mail, Plus, Search, Filter, Calendar, Edit2, Check, X } from 'lucide-react';
 import KanbanColumn from './KanbanColumn';
+import GmailConnect from './GmailConnect';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { EmailData } from '@/services/gmailService';
 
 interface EmailCard {
   id: string;
@@ -27,6 +29,34 @@ const EmailKanban = () => {
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [newColumnTitle, setNewColumnTitle] = useState('');
   const [newColumnColor, setNewColumnColor] = useState('from-gray-500 to-gray-600');
+  const [showGmailDialog, setShowGmailDialog] = useState(false);
+
+  const [columns, setColumns] = useState([
+    {
+      id: 'inbox',
+      title: 'Inbox',
+      color: 'from-blue-500 to-cyan-500',
+      cards: []
+    },
+    {
+      id: 'in-progress',
+      title: 'In Progress',
+      color: 'from-yellow-500 to-orange-500',
+      cards: []
+    },
+    {
+      id: 'waiting',
+      title: 'Waiting for Reply',
+      color: 'from-purple-500 to-pink-500',
+      cards: []
+    },
+    {
+      id: 'done',
+      title: 'Completed',
+      color: 'from-green-500 to-emerald-500',
+      cards: []
+    }
+  ]);
 
   const colorOptions = [
     { name: 'Blue', value: 'from-blue-500 to-cyan-500' },
@@ -39,95 +69,33 @@ const EmailKanban = () => {
     { name: 'Gray', value: 'from-gray-500 to-gray-600' }
   ];
 
-  // Mock data - in real app this would come from Gmail API via Supabase
-  const mockEmailCards: EmailCard[] = [
-    {
-      id: '1',
-      subject: 'Fashion Week Planning',
-      emails: [
-        {
-          id: '1a',
-          from: 'sarah@fashionhouse.com',
-          preview: 'Let\'s discuss the upcoming fashion week schedule and venue arrangements...',
-          timestamp: '2 hours ago',
-          isRead: false
-        },
-        {
-          id: '1b',
-          from: 'events@milanfw.com',
-          preview: 'Confirmation for Milan Fashion Week 2024 - booth #47',
-          timestamp: '4 hours ago',
-          isRead: true
-        }
-      ],
-      priority: 'high',
-      labels: ['Fashion Week', 'Events']
-    },
-    {
-      id: '2',
-      subject: 'Collection Review',
-      emails: [
-        {
-          id: '2a',
-          from: 'creative@studio.com',
-          preview: 'The Spring 2024 collection needs final approval before production...',
-          timestamp: '1 day ago',
-          isRead: false
-        }
-      ],
-      priority: 'medium',
-      labels: ['Design', 'Review']
-    },
-    {
-      id: '3',
-      subject: 'Supplier Negotiations',
-      emails: [
-        {
-          id: '3a',
-          from: 'suppliers@textiles.com',
-          preview: 'Updated pricing for organic cotton materials...',
-          timestamp: '3 days ago',
-          isRead: true
-        },
-        {
-          id: '3b',
-          from: 'logistics@shipping.com',
-          preview: 'Shipping delays for fabric orders from Italy',
-          timestamp: '2 days ago',
-          isRead: false
-        }
-      ],
-      priority: 'low',
-      labels: ['Suppliers', 'Materials']
-    }
-  ];
+  const handleGmailEmailsLoaded = (gmailEmails: EmailData[]) => {
+    // Convert Gmail emails to EmailCard format
+    const emailCards: EmailCard[] = gmailEmails.map(email => ({
+      id: email.id,
+      subject: email.subject,
+      emails: [{
+        id: email.id,
+        from: email.from,
+        preview: email.preview,
+        timestamp: email.timestamp,
+        isRead: email.isRead
+      }],
+      priority: 'medium' as const,
+      labels: email.labels.filter(label => !['INBOX', 'UNREAD', 'IMPORTANT'].includes(label))
+    }));
 
-  const [columns, setColumns] = useState([
-    {
-      id: 'inbox',
-      title: 'Inbox',
-      color: 'from-blue-500 to-cyan-500',
-      cards: [mockEmailCards[0]]
-    },
-    {
-      id: 'in-progress',
-      title: 'In Progress',
-      color: 'from-yellow-500 to-orange-500',
-      cards: [mockEmailCards[1]]
-    },
-    {
-      id: 'waiting',
-      title: 'Waiting for Reply',
-      color: 'from-purple-500 to-pink-500',
-      cards: []
-    },
-    {
-      id: 'done',
-      title: 'Completed',
-      color: 'from-green-500 to-emerald-500',
-      cards: [mockEmailCards[2]]
-    }
-  ]);
+    // Add all Gmail emails to the inbox column
+    setColumns(prevColumns => 
+      prevColumns.map(col => 
+        col.id === 'inbox' 
+          ? { ...col, cards: [...col.cards, ...emailCards] }
+          : col
+      )
+    );
+
+    setShowGmailDialog(false);
+  };
 
   const handleDragStart = (e: React.DragEvent, cardId: string, sourceColumnId: string) => {
     e.dataTransfer.setData('cardId', cardId);
@@ -241,6 +209,21 @@ const EmailKanban = () => {
           </div>
           
           <div className="flex items-center gap-3">
+            <Dialog open={showGmailDialog} onOpenChange={setShowGmailDialog}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2 bg-red-50 border-red-200 text-red-600 hover:bg-red-100">
+                  <Mail className="h-4 w-4" />
+                  Import Gmail
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Connect Gmail Account</DialogTitle>
+                </DialogHeader>
+                <GmailConnect onEmailsLoaded={handleGmailEmailsLoaded} />
+              </DialogContent>
+            </Dialog>
+            
             <Button variant="outline" size="sm" className="gap-2">
               <Calendar className="h-4 w-4" />
               Today
