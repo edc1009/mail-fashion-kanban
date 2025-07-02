@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback } from 'react';
 import { Search, Filter, Calendar, Plus, Kanban, GripVertical, X, ArrowLeft, Archive, Trash2, MoreVertical, Reply, Forward, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 import EmailInbox from './EmailInbox';
 import KanbanColumn from './KanbanColumn';
 
@@ -158,6 +159,24 @@ const EmailKanbanLayout = () => {
     }
   ]);
 
+  const { toast } = useToast();
+
+  // Enhanced function to find if email exists in any card
+  const findEmailInCards = (emailId: string): { columnId: string; cardId: string; cardTitle: string } | null => {
+    for (const column of columns) {
+      for (const card of column.cards) {
+        if (card.emails.some(email => email.id === emailId)) {
+          return {
+            columnId: column.id,
+            cardId: card.id,
+            cardTitle: card.subject
+          };
+        }
+      }
+    }
+    return null;
+  };
+
   const handleDragStart = (e: React.DragEvent, cardId: string, sourceColumnId: string) => {
     e.dataTransfer.setData('cardId', cardId);
     e.dataTransfer.setData('sourceColumnId', sourceColumnId);
@@ -191,6 +210,17 @@ const EmailKanbanLayout = () => {
         const email: DraggedEmail = JSON.parse(emailDataString);
         console.log('Email dropped into column:', targetColumnId, email);
         
+        // Check if email already exists in any card
+        const existingLocation = findEmailInCards(email.id);
+        if (existingLocation) {
+          toast({
+            title: "Email Already Exists",
+            description: `This email is already in "${existingLocation.cardTitle}". Cannot add duplicate emails.`,
+            variant: "destructive",
+          });
+          return;
+        }
+        
         setColumns(prevColumns => {
           const newColumns = [...prevColumns];
           const targetColumn = newColumns.find(col => col.id === targetColumnId);
@@ -202,18 +232,20 @@ const EmailKanbanLayout = () => {
             );
             
             if (existingCard) {
-              // Add email to existing card if not already present
-              const emailExists = existingCard.emails.some(e => e.id === email.id);
-              if (!emailExists) {
-                existingCard.emails.push({
-                  id: email.id,
-                  from: email.from,
-                  preview: email.preview,
-                  timestamp: email.timestamp,
-                  isRead: email.isRead
-                });
-                console.log('Added email to existing card:', existingCard.subject);
-              }
+              // Add email to existing card
+              existingCard.emails.push({
+                id: email.id,
+                from: email.from,
+                preview: email.preview,
+                timestamp: email.timestamp,
+                isRead: email.isRead
+              });
+              console.log('Added email to existing card:', existingCard.subject);
+              
+              toast({
+                title: "Email Added",
+                description: `Email added to existing card "${existingCard.subject}".`,
+              });
             } else {
               // Create new card
               const newCard: EmailCard = {
@@ -231,6 +263,11 @@ const EmailKanbanLayout = () => {
               };
               targetColumn.cards.push(newCard);
               console.log('Created new card:', newCard.subject);
+              
+              toast({
+                title: "New Card Created",
+                description: `Created new card "${newCard.subject}" from email.`,
+              });
             }
           }
           
