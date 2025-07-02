@@ -33,6 +33,17 @@ interface ColorOption {
   value: string;
 }
 
+// Add interface for dragged email from inbox
+interface DraggedEmail {
+  id: string;
+  from: string;
+  subject: string;
+  preview: string;
+  timestamp: string;
+  isRead: boolean;
+  labels: string[];
+}
+
 interface KanbanColumnProps {
   column: Column;
   onDragStart: (e: React.DragEvent, cardId: string, sourceColumnId: string) => void;
@@ -51,6 +62,7 @@ interface KanbanColumnProps {
   onColumnDragStart: (e: React.DragEvent) => void;
   onColumnDragEnd: () => void;
   canDragColumn: boolean;
+  onEmailDragStart?: (e: React.DragEvent, email: DraggedEmail) => void;
 }
 
 const KanbanColumn: React.FC<KanbanColumnProps> = ({ 
@@ -70,10 +82,24 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
   isDragging = false,
   onColumnDragStart,
   onColumnDragEnd,
-  canDragColumn
+  canDragColumn,
+  onEmailDragStart
 }) => {
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
+    // Visual feedback for drop zone
+    e.currentTarget.classList.add('bg-blue-50', 'border-blue-300');
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    // Remove visual feedback
+    e.currentTarget.classList.remove('bg-blue-50', 'border-blue-300');
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    // Remove visual feedback
+    e.currentTarget.classList.remove('bg-blue-50', 'border-blue-300');
+    onDrop(e);
   };
 
   return (
@@ -82,7 +108,8 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
         isDragging ? 'cursor-grabbing scale-105 shadow-xl' : 'cursor-grab hover:shadow-xl'
       }`}
       onDragOver={handleDragOver}
-      onDrop={onDrop}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
     >
       {/* Column Header */}
       <div 
@@ -177,9 +204,10 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
         ))}
         
         {column.cards.length === 0 && (
-          <div className="text-center text-gray-400 py-8">
+          <div className="text-center text-gray-400 py-8 border-2 border-dashed border-gray-200 rounded-lg">
             <div className="text-4xl mb-2">📧</div>
-            <p className="text-sm">No emails here</p>
+            <p className="text-sm">Drop emails here</p>
+            <p className="text-xs mt-1">Drag emails from inbox to create cards</p>
           </div>
         )}
       </div>
