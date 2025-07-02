@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Inbox, Search, Filter, Star, Archive, Trash2, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -26,9 +27,10 @@ interface Email {
 interface EmailInboxProps {
   onEmailSelect: (email: Email) => void;
   selectedEmailId?: string;
+  onEmailDragStart?: (e: React.DragEvent, email: Email) => void;
 }
 
-const EmailInbox: React.FC<EmailInboxProps> = ({ onEmailSelect, selectedEmailId }) => {
+const EmailInbox: React.FC<EmailInboxProps> = ({ onEmailSelect, selectedEmailId, onEmailDragStart }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
 
@@ -112,6 +114,12 @@ const EmailInbox: React.FC<EmailInboxProps> = ({ onEmailSelect, selectedEmailId 
     );
   };
 
+  const handleDragStart = (e: React.DragEvent, email: Email) => {
+    if (onEmailDragStart) {
+      onEmailDragStart(e, email);
+    }
+  };
+
   return (
     <div className="h-full flex flex-col bg-white rounded-lg border border-gray-200 shadow-sm">
       {/* Inbox Header */}
@@ -190,6 +198,8 @@ const EmailInbox: React.FC<EmailInboxProps> = ({ onEmailSelect, selectedEmailId 
         {filteredEmails.map((email) => (
           <div
             key={email.id}
+            draggable={!!onEmailDragStart}
+            onDragStart={(e) => handleDragStart(e, email)}
             onClick={() => onEmailSelect(email)}
             className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors border-l-4 ${
               getReadStatusColor(email.isRead)
@@ -197,6 +207,8 @@ const EmailInbox: React.FC<EmailInboxProps> = ({ onEmailSelect, selectedEmailId 
               selectedEmailId === email.id ? 'bg-purple-50 border-r-4 border-r-purple-500' : ''
             } ${
               !email.isRead ? 'bg-red-50/30' : 'bg-green-50/20'
+            } ${
+              onEmailDragStart ? 'cursor-grab active:cursor-grabbing' : ''
             }`}
           >
             <div className="flex items-start gap-3">
