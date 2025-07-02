@@ -31,6 +31,17 @@ interface EmailCard {
   labels: string[];
 }
 
+// Add interface for dragged email from inbox
+interface DraggedEmail {
+  id: string;
+  from: string;
+  subject: string;
+  preview: string;
+  timestamp: string;
+  isRead: boolean;
+  labels: string[];
+}
+
 const EmailKanbanLayout = () => {
   const [selectedEmail, setSelectedEmail] = useState<EmailCard | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -152,28 +163,103 @@ const EmailKanbanLayout = () => {
     e.dataTransfer.setData('sourceColumnId', sourceColumnId);
   };
 
+  // Handle email drag from inbox
+  const handleEmailDragStart = (e: React.DragEvent, email: Email) => {
+    console.log('Email drag started:', email);
+    const draggedEmail: DraggedEmail = {
+      id: email.id,
+      from: email.from,
+      subject: email.subject,
+      preview: email.preview,
+      timestamp: email.timestamp,
+      isRead: email.isRead,
+      labels: email.labels
+    };
+    e.dataTransfer.setData('emailData', JSON.stringify(draggedEmail));
+    e.dataTransfer.setData('dragType', 'email');
+  };
+
   const handleDrop = (e: React.DragEvent, targetColumnId: string) => {
     e.preventDefault();
-    const cardId = e.dataTransfer.getData('cardId');
-    const sourceColumnId = e.dataTransfer.getData('sourceColumnId');
-
-    if (sourceColumnId === targetColumnId) return;
-
-    setColumns(prevColumns => {
-      const newColumns = [...prevColumns];
-      const sourceColumn = newColumns.find(col => col.id === sourceColumnId);
-      const targetColumn = newColumns.find(col => col.id === targetColumnId);
-      
-      if (sourceColumn && targetColumn) {
-        const cardIndex = sourceColumn.cards.findIndex(card => card.id === cardId);
-        if (cardIndex !== -1) {
-          const [movedCard] = sourceColumn.cards.splice(cardIndex, 1);
-          targetColumn.cards.push(movedCard);
-        }
+    
+    const dragType = e.dataTransfer.getData('dragType');
+    
+    if (dragType === 'email') {
+      // Handle email drop from inbox
+      const emailDataString = e.dataTransfer.getData('emailData');
+      if (emailDataString) {
+        const email: DraggedEmail = JSON.parse(emailDataString);
+        console.log('Email dropped into column:', targetColumnId, email);
+        
+        setColumns(prevColumns => {
+          const newColumns = [...prevColumns];
+          const targetColumn = newColumns.find(col => col.id === targetColumnId);
+          
+          if (targetColumn) {
+            // Check if a card with the same subject already exists
+            const existingCard = targetColumn.cards.find(card => 
+              card.subject.toLowerCase().trim() === email.subject.toLowerCase().trim()
+            );
+            
+            if (existingCard) {
+              // Add email to existing card if not already present
+              const emailExists = existingCard.emails.some(e => e.id === email.id);
+              if (!emailExists) {
+                existingCard.emails.push({
+                  id: email.id,
+                  from: email.from,
+                  preview: email.preview,
+                  timestamp: email.timestamp,
+                  isRead: email.isRead
+                });
+                console.log('Added email to existing card:', existingCard.subject);
+              }
+            } else {
+              // Create new card
+              const newCard: EmailCard = {
+                id: `card-${Date.now()}-${email.id}`,
+                subject: email.subject,
+                emails: [{
+                  id: email.id,
+                  from: email.from,
+                  preview: email.preview,
+                  timestamp: email.timestamp,
+                  isRead: email.isRead
+                }],
+                priority: 'medium',
+                labels: email.labels.filter(label => !['INBOX', 'UNREAD', 'IMPORTANT'].includes(label))
+              };
+              targetColumn.cards.push(newCard);
+              console.log('Created new card:', newCard.subject);
+            }
+          }
+          
+          return newColumns;
+        });
       }
-      
-      return newColumns;
-    });
+    } else {
+      // Handle card movement between columns
+      const cardId = e.dataTransfer.getData('cardId');
+      const sourceColumnId = e.dataTransfer.getData('sourceColumnId');
+
+      if (sourceColumnId === targetColumnId) return;
+
+      setColumns(prevColumns => {
+        const newColumns = [...prevColumns];
+        const sourceColumn = newColumns.find(col => col.id === sourceColumnId);
+        const targetColumn = newColumns.find(col => col.id === targetColumnId);
+        
+        if (sourceColumn && targetColumn) {
+          const cardIndex = sourceColumn.cards.findIndex(card => card.id === cardId);
+          if (cardIndex !== -1) {
+            const [movedCard] = sourceColumn.cards.splice(cardIndex, 1);
+            targetColumn.cards.push(movedCard);
+          }
+        }
+        
+        return newColumns;
+      });
+    }
   };
 
   const handleColumnDragStart = (e: React.DragEvent, columnId: string) => {
@@ -386,6 +472,7 @@ const EmailKanbanLayout = () => {
           <EmailInbox 
             onEmailSelect={handleEmailSelect}
             selectedEmailId={selectedEmail?.id}
+            onEmailDragStart={handleEmailDragStart}
           />
         </div>
 
@@ -613,6 +700,7 @@ const EmailKanbanLayout = () => {
                   onColumnDragStart={(e) => handleColumnDragStart(e, column.id)}
                   onColumnDragEnd={handleColumnDragEnd}
                   canDragColumn={editingColumnId !== column.id && !isAddingColumn}
+                  onEmailDragStart={handleEmailDragStart}
                 />
               </div>
             ))}
