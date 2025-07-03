@@ -124,14 +124,27 @@ const AnimatedKanbanColumn: React.FC<AnimatedKanbanColumnProps> = ({
         damping: 25,
         layout: { duration: 0.3 }
       }}
-      className="w-full h-full bg-white/60 backdrop-blur-sm rounded-2xl border border-white/20 shadow-lg transition-all duration-200 hover:shadow-xl"
+      className={`min-w-80 bg-white/60 backdrop-blur-sm rounded-2xl border border-white/20 shadow-lg transition-all duration-200 ${
+        isDragging ? 'cursor-grabbing scale-105 shadow-xl z-50' : 'cursor-grab hover:shadow-xl'
+      } ${
+        isBeingDraggedOver ? 'transform translate-x-4' : ''
+      }`}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       style={{ zIndex: isDragging ? 1000 : 1 }}
     >
       {/* Column Header */}
-      <div className="p-4 border-b border-gray-100">
+      <div 
+        className="p-4 border-b border-gray-100"
+        draggable={canDragColumn && !isEditing}
+        onDragStart={(e) => {
+          e.dataTransfer.setData('dragType', 'column');
+          onColumnDragStart(e);
+        }}
+        onDragEnd={onColumnDragEnd}
+        style={{ cursor: canDragColumn && !isEditing ? 'grab' : 'default' }}
+      >
         {isEditing ? (
           <div className="space-y-3">
             <div className="flex items-center gap-2">

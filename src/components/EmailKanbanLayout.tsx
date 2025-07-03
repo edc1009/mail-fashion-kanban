@@ -3,7 +3,6 @@ import { Search, Filter, Calendar, Plus, Kanban, GripVertical, X, ArrowLeft, Arc
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { ReactSortable } from 'react-sortablejs';
 import EmailInbox from './EmailInbox';
 import AnimatedKanbanColumn from './AnimatedKanbanColumn';
 import EmailCardModal from './EmailCardModal';
@@ -776,54 +775,45 @@ const EmailKanbanLayout = () => {
         {/* Kanban Columns */}
         <div className="flex-1 overflow-hidden p-4">
           <div className="flex gap-6 h-full overflow-x-auto pb-4">
-            <ReactSortable
-              list={columns}
-              setList={setColumns}
-              className="flex gap-6"
-              animation={200}
-              delayOnTouchStart={true}
-              delay={2}
-              ghostClass="opacity-30"
-              chosenClass="ring-2 ring-purple-500 shadow-xl"
-              dragClass="rotate-3 scale-105"
-              disabled={editingColumnId !== null || isAddingColumn}
-            >
-              {columns.map(column => (
-                <div 
-                  key={column.id} 
-                  className="w-80 flex-shrink-0"
-                >
-                  <AnimatedKanbanColumn
-                    column={column}
-                    index={columns.indexOf(column)}
-                    onDragStart={handleDragStart}
-                    onDrop={(e) => handleDrop(e, column.id)}
-                    onEdit={() => handleEditColumn(column.id)}
-                    onDelete={() => handleDeleteColumn(column.id)}
-                    isEditing={editingColumnId === column.id}
-                    editingTitle={editingTitle}
-                    editingColor={editingColor}
-                    onTitleChange={setEditingTitle}
-                    onColorChange={setEditingColor}
-                    onSaveEdit={handleSaveEdit}
-                    onCancelEdit={handleCancelEdit}
-                    colorOptions={colorOptions}
-                    isDragging={draggedColumnId === column.id}
-                    onColumnDragStart={(e) => handleColumnDragStart(e, column.id)}
-                    onColumnDragEnd={handleColumnDragEnd}
-                    onColumnDragOver={handleColumnDragOver}
-                    onColumnDrop={handleColumnDrop}
-                    canDragColumn={editingColumnId !== column.id && !isAddingColumn}
-                    onCardClick={handleCardClick}
-                    draggedColumnId={draggedColumnId}
-                  />
-                </div>
-              ))}
-            </ReactSortable>
+            {columns.map(column => (
+              <div 
+                key={column.id} 
+                className={`min-w-[300px] transition-opacity duration-200 ${
+                  draggedColumnId === column.id ? 'opacity-50' : 'opacity-100'
+                }`}
+                onDragOver={handleColumnDragOver}
+                onDrop={(e) => handleColumnDrop(e, column.id)}
+              >
+                <AnimatedKanbanColumn
+                  column={column}
+                  index={columns.indexOf(column)}
+                  onDragStart={handleDragStart}
+                  onDrop={(e) => handleDrop(e, column.id)}
+                  onEdit={() => handleEditColumn(column.id)}
+                  onDelete={() => handleDeleteColumn(column.id)}
+                  isEditing={editingColumnId === column.id}
+                  editingTitle={editingTitle}
+                  editingColor={editingColor}
+                  onTitleChange={setEditingTitle}
+                  onColorChange={setEditingColor}
+                  onSaveEdit={handleSaveEdit}
+                  onCancelEdit={handleCancelEdit}
+                  colorOptions={colorOptions}
+                  isDragging={draggedColumnId === column.id}
+                  onColumnDragStart={(e) => handleColumnDragStart(e, column.id)}
+                  onColumnDragEnd={handleColumnDragEnd}
+                  onColumnDragOver={handleColumnDragOver}
+                  onColumnDrop={handleColumnDrop}
+                  canDragColumn={editingColumnId !== column.id && !isAddingColumn}
+                  onCardClick={handleCardClick}
+                  draggedColumnId={draggedColumnId}
+                />
+              </div>
+            ))}
             
             {/* Add New Column */}
             {isAddingColumn ? (
-              <div className="w-80 flex-shrink-0 bg-white/60 backdrop-blur-sm rounded-2xl border border-white/20 shadow-lg">
+              <div className="min-w-80 bg-white/60 backdrop-blur-sm rounded-2xl border border-white/20 shadow-lg">
                 <div className="p-4">
                   <div className="space-y-4">
                     <Input
@@ -867,7 +857,7 @@ const EmailKanbanLayout = () => {
             ) : (
               <button
                 onClick={() => setIsAddingColumn(true)}
-                className="w-80 flex-shrink-0 h-32 bg-white/30 backdrop-blur-sm rounded-2xl border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors flex items-center justify-center group"
+                className="min-w-80 h-32 bg-white/30 backdrop-blur-sm rounded-2xl border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors flex items-center justify-center group"
               >
                 <div className="text-center">
                   <Plus className="h-8 w-8 text-gray-400 group-hover:text-gray-600 mx-auto mb-2" />
