@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import EmailInbox from './EmailInbox';
-import KanbanColumn from './KanbanColumn';
+import AnimatedKanbanColumn from './AnimatedKanbanColumn';
+import EmailCardModal from './EmailCardModal';
 
 interface Email {
   id: string;
@@ -56,6 +57,8 @@ const EmailKanbanLayout = () => {
   const [newColumnTitle, setNewColumnTitle] = useState('');
   const [newColumnColor, setNewColumnColor] = useState('from-gray-500 to-gray-600');
   const [draggedColumnId, setDraggedColumnId] = useState<string | null>(null);
+  const [selectedCard, setSelectedCard] = useState<EmailCard | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const resizeRef = useRef<HTMLDivElement>(null);
 
   // Mock data for kanban cards
@@ -177,6 +180,18 @@ const EmailKanbanLayout = () => {
     return null;
   };
 
+  // Function to handle card click and open modal
+  const handleCardClick = (card: EmailCard) => {
+    setSelectedCard(card);
+    setIsModalOpen(true);
+  };
+
+  // Function to close modal
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedCard(null);
+  };
+
   const handleDragStart = (e: React.DragEvent, cardId: string, sourceColumnId: string) => {
     e.dataTransfer.setData('cardId', cardId);
     e.dataTransfer.setData('sourceColumnId', sourceColumnId);
@@ -215,9 +230,18 @@ const EmailKanbanLayout = () => {
         if (existingLocation) {
           toast({
             title: "Email Already Exists",
-            description: `This email is already in "${existingLocation.cardTitle}". Cannot add duplicate emails.`,
+            description: `This email is already in "${existingLocation.cardTitle}". Click to view.`,
             variant: "destructive",
           });
+          
+          // Find and highlight the existing card
+          const existingCard = columns
+            .find(col => col.id === existingLocation.columnId)
+            ?.cards.find(card => card.id === existingLocation.cardId);
+          
+          if (existingCard) {
+            handleCardClick(existingCard);
+          }
           return;
         }
         
@@ -269,6 +293,47 @@ const EmailKanbanLayout = () => {
                 description: `Created new card "${newCard.subject}" from email.`,
               });
             }
+          }
+          
+          return newColumns;
+        });
+      }
+    } else if (dragType === 'email-from-card') {
+      // Handle email extracted from existing card
+      const emailDataString = e.dataTransfer.getData('emailData');
+      const sourceCardId = e.dataTransfer.getData('sourceCardId');
+      
+      if (emailDataString && sourceCardId) {
+        const email = JSON.parse(emailDataString);
+        
+        setColumns(prevColumns => {
+          const newColumns = [...prevColumns];
+          
+          // Remove email from source card
+          for (const column of newColumns) {
+            const sourceCard = column.cards.find(card => card.id === sourceCardId);
+            if (sourceCard && sourceCard.emails.length > 1) {
+              sourceCard.emails = sourceCard.emails.filter(e => e.id !== email.id);
+              break;
+            }
+          }
+          
+          // Create new card in target column
+          const targetColumn = newColumns.find(col => col.id === targetColumnId);
+          if (targetColumn) {
+            const newCard: EmailCard = {
+              id: `card-${Date.now()}-${email.id}`,
+              subject: email.subject || 'Extracted Email',
+              emails: [email],
+              priority: 'medium',
+              labels: []
+            };
+            targetColumn.cards.push(newCard);
+            
+            toast({
+              title: "Email Extracted",
+              description: `Created new card from extracted email.`,
+            });
           }
           
           return newColumns;
@@ -719,8 +784,9 @@ const EmailKanbanLayout = () => {
                 onDragOver={handleColumnDragOver}
                 onDrop={(e) => handleColumnDrop(e, column.id)}
               >
-                <KanbanColumn
+                <AnimatedKanbanColumn
                   column={column}
+                  index={columns.indexOf(column)}
                   onDragStart={handleDragStart}
                   onDrop={(e) => handleDrop(e, column.id)}
                   onEdit={() => handleEditColumn(column.id)}
@@ -736,8 +802,11 @@ const EmailKanbanLayout = () => {
                   isDragging={draggedColumnId === column.id}
                   onColumnDragStart={(e) => handleColumnDragStart(e, column.id)}
                   onColumnDragEnd={handleColumnDragEnd}
+                  onColumnDragOver={handleColumnDragOver}
+                  onColumnDrop={handleColumnDrop}
                   canDragColumn={editingColumnId !== column.id && !isAddingColumn}
-                  onEmailDragStart={handleEmailDragStart}
+                  onCardClick={handleCardClick}
+                  draggedColumnId={draggedColumnId}
                 />
               </div>
             ))}
@@ -800,7 +869,12 @@ const EmailKanbanLayout = () => {
         </div>
       </div>
 
-
+      {/* Email Card Modal */}
+      <EmailCardModal
+        card={selectedCard}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
     </div>
   );
 };

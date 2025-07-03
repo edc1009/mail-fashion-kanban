@@ -22,9 +22,10 @@ interface EmailCardData {
 interface EmailCardProps {
   card: EmailCardData;
   onDragStart: (e: React.DragEvent) => void;
+  onCardClick?: () => void;
 }
 
-const EmailCard: React.FC<EmailCardProps> = ({ card, onDragStart }) => {
+const EmailCard: React.FC<EmailCardProps> = ({ card, onDragStart, onCardClick }) => {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
@@ -44,6 +45,7 @@ const EmailCard: React.FC<EmailCardProps> = ({ card, onDragStart }) => {
     <div
       draggable
       onDragStart={onDragStart}
+      onClick={onCardClick}
       className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-grab active:cursor-grabbing hover:scale-[1.02] group"
     >
       {/* Card Header */}
@@ -113,8 +115,14 @@ const EmailCard: React.FC<EmailCardProps> = ({ card, onDragStart }) => {
         
         {card.emails.length > 2 && (
           <div className="text-center pt-2 border-t border-gray-100">
-            <span className="text-xs text-purple-600 hover:text-purple-700 cursor-pointer">
-              +{card.emails.length - 2} more emails
+            <span 
+              className="text-xs text-purple-600 hover:text-purple-700 cursor-pointer font-medium"
+              onClick={(e) => {
+                e.stopPropagation();
+                onCardClick?.();
+              }}
+            >
+              +{card.emails.length - 2} more emails - Click to expand
             </span>
           </div>
         )}
