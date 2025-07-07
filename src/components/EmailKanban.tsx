@@ -49,7 +49,138 @@ const EmailKanban = () => {
       id: 'inbox',
       title: 'Inbox',
       color: 'from-blue-500 to-cyan-500',
-      cards: []
+      cards: [
+        {
+          id: 'email-1',
+          subject: '貨櫃船 MSC MAYA 延遲抵港通知',
+          emails: [{
+            id: 'email-1-1',
+            from: 'operations@mscshipping.com',
+            preview: '由於惡劣天氣影響，MSC MAYA 貨櫃船預計將延遲 6 小時抵達高雄港。請調整您的提貨安排。貨櫃編號: MSCU1234567',
+            timestamp: '2 小時前',
+            isRead: false
+          }],
+          priority: 'high' as const,
+          labels: ['緊急', '延遲通知']
+        },
+        {
+          id: 'email-2',
+          subject: '提單確認 - 電子產品出口至德國',
+          emails: [{
+            id: 'email-2-1',
+            from: 'documentation@evergreen-line.com',
+            preview: '您的提單 EGLV202401001 已確認。貨物: 電子產品 500 箱，目的地: 漢堡港。預計航行時間 25 天。',
+            timestamp: '4 小時前',
+            isRead: false
+          }],
+          priority: 'medium' as const,
+          labels: ['提單', '出口']
+        },
+        {
+          id: 'email-3',
+          subject: '海關檢查通知 - 進口紡織品',
+          emails: [{
+            id: 'email-3-1',
+            from: 'customs@keelung-port.gov.tw',
+            preview: '您的進口貨物 (申報編號: IMP240115001) 已被選中進行海關檢查。請於明日上午 10:00 前往基隆港 3 號碼頭配合檢查。',
+            timestamp: '6 小時前',
+            isRead: true
+          }],
+          priority: 'high' as const,
+          labels: ['海關', '檢查']
+        },
+        {
+          id: 'email-4',
+          subject: '運費報價 - 台灣至美國西岸',
+          emails: [{
+            id: 'email-4-1',
+            from: 'sales@yangming.com',
+            preview: '感謝您的詢價。20呎貨櫃台灣至洛杉磯運費報價: USD 2,850/TEU，40呎貨櫃: USD 3,200/TEU。報價有效期至本月底。',
+            timestamp: '8 小時前',
+            isRead: false
+          }],
+          priority: 'medium' as const,
+          labels: ['報價', '美國線']
+        },
+        {
+          id: 'email-5',
+          subject: '貨物保險理賠申請確認',
+          emails: [{
+            id: 'email-5-1',
+            from: 'claims@marine-insurance.com',
+            preview: '您的理賠申請 (案件編號: CL2024001) 已收到。貨物: 機械設備，損失金額: USD 15,000。預計 10 個工作天內完成審核。',
+            timestamp: '1 天前',
+            isRead: true
+          }],
+          priority: 'medium' as const,
+          labels: ['保險', '理賠']
+        },
+        {
+          id: 'email-6',
+          subject: '新航線開通 - 台灣直達歐洲',
+          emails: [{
+            id: 'email-6-1',
+            from: 'marketing@cosco-shipping.com',
+            preview: '中遠海運新開通台灣直達鹿特丹航線，每週二班，航行時間縮短至 22 天。首航優惠運費 85 折，歡迎洽詢。',
+            timestamp: '1 天前',
+            isRead: false
+          }],
+          priority: 'low' as const,
+          labels: ['新航線', '優惠']
+        },
+        {
+          id: 'email-7',
+          subject: '危險品申報文件補件通知',
+          emails: [{
+            id: 'email-7-1',
+            from: 'dangerous-goods@port-authority.gov.tw',
+            preview: '您申報的危險品貨物 (UN1993 易燃液體) 文件不完整，請補交 MSDS 安全資料表及包裝證明書。截止日期: 明日下午 5:00。',
+            timestamp: '1 天前',
+            isRead: false
+          }],
+          priority: 'high' as const,
+          labels: ['危險品', '補件']
+        },
+        {
+          id: 'email-8',
+          subject: '空櫃調度安排 - 台中港',
+          emails: [{
+            id: 'email-8-1',
+            from: 'equipment@hapag-lloyd.com',
+            preview: '您預訂的 20 呎空櫃已安排至台中港 5 號碼頭。提櫃時間: 明日上午 9:00-12:00。請攜帶設備交接單及相關證件。',
+            timestamp: '2 天前',
+            isRead: true
+          }],
+          priority: 'medium' as const,
+          labels: ['空櫃', '調度']
+        },
+        {
+          id: 'email-9',
+          subject: '月度運輸報告 - 2024年1月',
+          emails: [{
+            id: 'email-9-1',
+            from: 'reports@logistics-partner.com',
+            preview: '1月份運輸統計: 總貨櫃量 1,250 TEU，準時率 96.8%，主要目的地為東南亞 (45%) 及北美 (32%)。詳細報告請見附件。',
+            timestamp: '3 天前',
+            isRead: true
+          }],
+          priority: 'low' as const,
+          labels: ['報告', '統計']
+        },
+        {
+          id: 'email-10',
+          subject: '港口擁堵預警 - 上海洋山港',
+          emails: [{
+            id: 'email-10-1',
+            from: 'alerts@shipping-intelligence.com',
+            preview: '受春節前貨量激增影響，上海洋山港出現嚴重擁堵。預計延遲 3-5 天。建議考慮替代港口或調整船期安排。',
+            timestamp: '3 天前',
+            isRead: false
+          }],
+          priority: 'high' as const,
+          labels: ['港口擁堵', '預警']
+        }
+      ]
     },
     {
       id: 'in-progress',
@@ -113,6 +244,7 @@ const EmailKanban = () => {
   const handleDragStart = (e: React.DragEvent, cardId: string, sourceColumnId: string) => {
     e.dataTransfer.setData('cardId', cardId);
     e.dataTransfer.setData('sourceColumnId', sourceColumnId);
+    e.dataTransfer.setData('dragType', 'card');
   };
 
   // Handle email drag from inbox
@@ -222,7 +354,29 @@ const EmailKanban = () => {
     
     const dragType = e.dataTransfer.getData('dragType');
     
-    if (dragType === 'email') {
+    if (dragType === 'card') {
+      // Handle card movement between columns
+      const cardId = e.dataTransfer.getData('cardId');
+      const sourceColumnId = e.dataTransfer.getData('sourceColumnId');
+
+      if (sourceColumnId === targetColumnId) return;
+
+      setColumns(prevColumns => {
+        const newColumns = [...prevColumns];
+        const sourceColumn = newColumns.find(col => col.id === sourceColumnId);
+        const targetColumn = newColumns.find(col => col.id === targetColumnId);
+        
+        if (sourceColumn && targetColumn) {
+          const cardIndex = sourceColumn.cards.findIndex(card => card.id === cardId);
+          if (cardIndex !== -1) {
+            const [movedCard] = sourceColumn.cards.splice(cardIndex, 1);
+            targetColumn.cards.push(movedCard);
+          }
+        }
+        
+        return newColumns;
+      });
+    } else if (dragType === 'email') {
       // Handle email drop from inbox
       const emailDataString = e.dataTransfer.getData('emailData');
       if (emailDataString) {
@@ -275,28 +429,6 @@ const EmailKanban = () => {
           return newColumns;
         });
       }
-    } else {
-      // Handle card movement between columns
-      const cardId = e.dataTransfer.getData('cardId');
-      const sourceColumnId = e.dataTransfer.getData('sourceColumnId');
-
-      if (sourceColumnId === targetColumnId) return;
-
-      setColumns(prevColumns => {
-        const newColumns = [...prevColumns];
-        const sourceColumn = newColumns.find(col => col.id === sourceColumnId);
-        const targetColumn = newColumns.find(col => col.id === targetColumnId);
-        
-        if (sourceColumn && targetColumn) {
-          const cardIndex = sourceColumn.cards.findIndex(card => card.id === cardId);
-          if (cardIndex !== -1) {
-            const [movedCard] = sourceColumn.cards.splice(cardIndex, 1);
-            targetColumn.cards.push(movedCard);
-          }
-        }
-        
-        return newColumns;
-      });
     }
   };
 
@@ -365,6 +497,7 @@ const EmailKanban = () => {
               column={column}
               onDragStart={handleDragStart}
               onDrop={(e) => handleDrop(e, column.id)}
+              onEmailToCard={handleEmailToCard}
               onEdit={() => handleEditColumn(column.id)}
               onDelete={() => handleDeleteColumn(column.id)}
               isEditing={editingColumnId === column.id}
@@ -376,7 +509,7 @@ const EmailKanban = () => {
               onCancelEdit={handleCancelEdit}
               colorOptions={colorOptions}
               onEmailDragStart={handleEmailDragStart}
-              onEmailToCard={handleEmailToCard}
+
             />
           </div>
         ))}

@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { Edit2, Check, X, Trash2 } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Edit2, Check, X, Trash2, Plus } from 'lucide-react';
 import EmailCard from './EmailCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -48,6 +48,7 @@ interface KanbanColumnProps {
   column: Column;
   onDragStart: (e: React.DragEvent, cardId: string, sourceColumnId: string) => void;
   onDrop: (e: React.DragEvent) => void;
+  onEmailToCard: (e: React.DragEvent, cardId: string) => void;
   onEdit: () => void;
   onDelete: () => void;
   isEditing: boolean;
@@ -59,7 +60,6 @@ interface KanbanColumnProps {
   onCancelEdit: () => void;
   colorOptions: ColorOption[];
   onEmailDragStart?: (e: React.DragEvent, email: DraggedEmail) => void;
-  onEmailToCard?: (e: React.DragEvent, targetCardId: string) => void;
 }
 
 const KanbanColumn: React.FC<KanbanColumnProps> = ({ 
@@ -79,28 +79,40 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
   onEmailDragStart,
   onEmailToCard
 }) => {
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const dragCounter = useRef(0);
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    dragCounter.current++;
+    if (!isDraggingOver) {
+      setIsDraggingOver(true);
+    }
+  };
+
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    // Visual feedback for drop zone
-    e.currentTarget.classList.add('bg-blue-50', 'border-blue-300');
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
-    // Remove visual feedback
-    e.currentTarget.classList.remove('bg-blue-50', 'border-blue-300');
+    e.preventDefault();
+    dragCounter.current--;
+    if (dragCounter.current === 0) {
+      setIsDraggingOver(false);
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
-    // Remove visual feedback
-    e.currentTarget.classList.remove('bg-blue-50', 'border-blue-300');
+    dragCounter.current = 0;
+    setIsDraggingOver(false);
     onDrop(e);
   };
 
   return (
     <div 
       className="w-full h-full bg-white/60 backdrop-blur-sm rounded-2xl border border-white/20 shadow-lg transition-all duration-200 hover:shadow-xl"
-      onDragOver={handleDragOver}
+      onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
       {/* Column Header */}
@@ -174,8 +186,9 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
       </div>
 
       {/* Cards */}
-      <div className="p-4 space-y-3 min-h-96">
-        {column.cards.map(card => (
+      <div className="p-4 space-y-3 min-h-[24rem] flex flex-col">
+        <div className="flex-grow space-y-3">
+          {column.cards.map(card => (
           <EmailCard
             key={card.id}
             card={card}
@@ -185,18 +198,30 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
             }}
             onDrop={(e) => {
               e.stopPropagation();
-              if (onEmailToCard) {
-                onEmailToCard(e, card.id);
-              }
+              onEmailToCard(e, card.id);
             }}
           />
         ))}
-        
-        {column.cards.length === 0 && (
-          <div className="text-center text-gray-400 py-8 border-2 border-dashed border-gray-200 rounded-lg">
-            <div className="text-4xl mb-2">📧</div>
-            <p className="text-sm">Drop emails here</p>
-            <p className="text-xs mt-1">Drag emails from inbox to create cards</p>
+        </div>
+
+        {/* Drop Zone */}
+        <div
+          className={`mt-auto flex-shrink-0 p-4 border-2 border-dashed rounded-lg text-center transition-all duration-300 ease-in-out ${isDraggingOver ? 'border-blue-500 bg-blue-50 scale-105' : 'border-gray-300'}`}
+        >
+          <div className="flex flex-col items-center justify-center h-full text-gray-500 pointer-events-none">
+            <Plus className={`w-6 h-6 mb-2 transition-transform duration-300 ${isDraggingOver ? 'rotate-90 scale-125' : ''}`} />
+            <p className="text-sm font-semibold">Add to {column.title}</p>
+            <p className="text-xs">Drop an email or card here</p>
+          </div>
+        </div>
+
+        {column.cards.length === 0 && !isDraggingOver && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="text-center text-gray-400">
+                <div className="text-5xl mb-2">📧</div>
+                <p className="font-semibold">This column is empty</p>
+                <p className="text-sm">Drag items here to get started</p>
+            </div>
           </div>
         )}
       </div>

@@ -19,6 +19,7 @@ interface EmailCardData {
   emails: Email[];
   priority: 'low' | 'medium' | 'high';
   labels: string[];
+  isNewCard?: boolean;
 }
 
 interface Column {
@@ -50,6 +51,7 @@ interface AnimatedKanbanColumnProps {
   colorOptions: { name: string; value: string }[];
   onCardClick?: (card: EmailCardData) => void;
   onEmailToCard?: (e: React.DragEvent, targetCardId: string) => void;
+  onCardUpdate?: (updatedCard: EmailCardData) => void;
 }
 
 const AnimatedKanbanColumn: React.FC<AnimatedKanbanColumnProps> = ({ 
@@ -68,7 +70,8 @@ const AnimatedKanbanColumn: React.FC<AnimatedKanbanColumnProps> = ({
   onCancelEdit, 
   colorOptions,
   onCardClick,
-  onEmailToCard
+  onEmailToCard,
+  onCardUpdate
 }) => {
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -207,6 +210,12 @@ const AnimatedKanbanColumn: React.FC<AnimatedKanbanColumnProps> = ({
               }}
               onCardClick={() => onCardClick?.(card)}
               onDrop={onEmailToCard ? (e) => onEmailToCard(e, card.id) : undefined}
+              onCardUpdate={(updatedCard) => {
+                // Clear isNewCard flag when card is updated
+                const cardWithoutNewFlag = { ...updatedCard, isNewCard: false };
+                onCardUpdate?.(cardWithoutNewFlag);
+              }}
+              isNewCard={card.isNewCard}
             />
           </motion.div>
         ))}

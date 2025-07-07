@@ -1,11 +1,12 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { Search, Filter, Calendar, Plus, Kanban, GripVertical, X, ArrowLeft, Archive, Trash2, MoreVertical, Reply, Forward, Check } from 'lucide-react';
+import { Search, Filter, Calendar, Plus, Check, X, Reply, Forward, Star, Archive, Trash2, ChevronDown, ChevronUp, ArrowLeft, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import EmailInbox from './EmailInbox';
 import AnimatedKanbanColumn from './AnimatedKanbanColumn';
 import EmailCardModal from './EmailCardModal';
+import EmailPreviewModal from './EmailPreviewModal';
 
 interface Email {
   id: string;
@@ -31,6 +32,7 @@ interface EmailCard {
   }[];
   priority: 'low' | 'medium' | 'high';
   labels: string[];
+  isNewCard?: boolean;
 }
 
 // Add interface for dragged email from inbox
@@ -47,8 +49,9 @@ interface DraggedEmail {
 const EmailKanbanLayout = () => {
   const [selectedEmail, setSelectedEmail] = useState<EmailCard | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [inboxWidth, setInboxWidth] = useState(400);
-  const [isResizing, setIsResizing] = useState(false);
+  const [inboxWidth, setInboxWidth] = useState(400); // Fixed width, no resizing
+  const [emailPreviewOpen, setEmailPreviewOpen] = useState(false);
+  const [selectedEmailForPreview, setSelectedEmailForPreview] = useState<Email | null>(null);
   const [expandedEmails, setExpandedEmails] = useState<Set<string>>(new Set());
   const [editingColumnId, setEditingColumnId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState('');
@@ -59,7 +62,6 @@ const EmailKanbanLayout = () => {
 
   const [selectedCard, setSelectedCard] = useState<EmailCard | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const resizeRef = useRef<HTMLDivElement>(null);
 
   // Mock data for kanban cards
   const mockEmailCards: EmailCard[] = [
@@ -190,6 +192,23 @@ const EmailKanbanLayout = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedCard(null);
+  };
+
+  // Function to handle card updates
+  const handleCardUpdate = (updatedCard: EmailCard) => {
+    setColumns(prevColumns => {
+      return prevColumns.map(column => ({
+        ...column,
+        cards: column.cards.map(card => 
+          card.id === updatedCard.id ? updatedCard : card
+        )
+      }));
+    });
+    
+    toast({
+      title: "Card Updated",
+      description: `Card "${updatedCard.subject}" has been updated.`,
+    });
   };
 
   const handleDragStart = (e: React.DragEvent, cardId: string, sourceColumnId: string) => {
@@ -335,7 +354,8 @@ const EmailKanbanLayout = () => {
                   isRead: email.isRead
                 }],
                 priority: 'medium',
-                labels: email.labels.filter(label => !['INBOX', 'UNREAD', 'IMPORTANT'].includes(label))
+                labels: email.labels.filter(label => !['INBOX', 'UNREAD', 'IMPORTANT'].includes(label)),
+                isNewCard: true
               };
               targetColumn.cards.push(newCard);
               console.log('Created new card:', newCard.subject);
@@ -545,44 +565,16 @@ const EmailKanbanLayout = () => {
     });
   };
 
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    setIsResizing(true);
-    e.preventDefault();
-  }, []);
+  // Email preview functionality
+  const handleEmailPreview = (email: Email) => {
+    setSelectedEmailForPreview(email);
+    setEmailPreviewOpen(true);
+  };
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isResizing) return;
-    
-    const newWidth = e.clientX;
-    if (newWidth >= 300 && newWidth <= 800) {
-      setInboxWidth(newWidth);
-    }
-  }, [isResizing]);
-
-  const handleMouseUp = useCallback(() => {
-    setIsResizing(false);
-  }, []);
-
-  React.useEffect(() => {
-    if (isResizing) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = 'col-resize';
-      document.body.style.userSelect = 'none';
-    } else {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-    }
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-    };
-  }, [isResizing, handleMouseMove, handleMouseUp]);
+  const handleCloseEmailPreview = () => {
+    setEmailPreviewOpen(false);
+    setSelectedEmailForPreview(null);
+  };
 
   return (
     <div className="h-screen flex bg-gradient-to-br from-slate-50 via-purple-50 to-pink-50">
@@ -594,7 +586,7 @@ const EmailKanbanLayout = () => {
         {/* Email Inbox */}
         <div className="flex-1 flex flex-col">
           <EmailInbox 
-            onEmailSelect={handleEmailSelect}
+            onEmailSelect={handleEmailPreview}
             selectedEmailId={selectedEmail?.id}
             onEmailDragStart={handleEmailDragStart}
           />
@@ -735,15 +727,8 @@ const EmailKanbanLayout = () => {
         )}
       </div>
 
-      {/* Resize Handle */}
-      <div 
-        ref={resizeRef}
-        className={`w-1 bg-gray-300 hover:bg-purple-400 cursor-col-resize flex items-center justify-center transition-colors ${
-          isResizing ? 'bg-purple-500' : ''
-        }`}
-        onMouseDown={handleMouseDown}
-      >
-        <GripVertical className="h-4 w-4 text-gray-500" />
+      {/* Fixed separator - no resize functionality */}
+      <div className="w-1 bg-gray-300">
       </div>
 
       {/* Right Side - Kanban Board */}
@@ -819,6 +804,7 @@ const EmailKanbanLayout = () => {
                   colorOptions={colorOptions}
                   onCardClick={handleCardClick}
                   onEmailToCard={handleEmailToCard}
+                onCardUpdate={handleCardUpdate}
                 />
               </div>
             ))}
@@ -886,6 +872,13 @@ const EmailKanbanLayout = () => {
         card={selectedCard}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
+      />
+
+      {/* Email Preview Modal */}
+      <EmailPreviewModal
+        email={selectedEmailForPreview}
+        isOpen={emailPreviewOpen}
+        onClose={handleCloseEmailPreview}
       />
     </div>
   );
